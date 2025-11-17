@@ -1,0 +1,14 @@
+# IDE Files (IntelliJ/PyCharm/VSCode settings)
+.idea/
+.vscode/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Git LFS cache (尽管你删了.git，但以防万一)
+.git/lfs/
