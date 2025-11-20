@@ -54,20 +54,21 @@ These prompts are used to generate visual elements that enhance game immersion:
 
 ### **Usage**
 
-1.  **Environment Setup**:
-    ```bash
-    pip install requests
-    ```
-2.  **Configure API Keys**: Set your LLM and image generation model API keys in `config.py` (or the corresponding configuration file).
-3.  **Execute Pipeline**:
+1.  **Implement API Functions**: 
+    First, you need to implement your own LLM and image generation logic in `chat.py`:
+    - **`generate_text()`**: Implement your preferred LLM API call (cloud-based like OpenAI, Anthropic, or local deployment like Ollama)
+    - **`generate_image()`**: Implement your preferred image generation API call (like Stability AI, DALL-E, or local models like Stable Diffusion)
+
+2.  **Execute Pipeline**:
+    Once the API functions are implemented, run the main pipeline:
     ```bash
     python story_to_game_pipeline.py
     ```
-    The script will read `StoryExample.txt`, process it, and generate `interactive_story_game.json` and `role_playing_game.json` in the `output/` directory.
+    The script will read `StoryExample.txt`, process it, and generate corresponding game directories with JSON files and assets in the `output/` directory, which can be directly loaded into compatible game software.
 
-### **Frontend Viewer**
+### **Unity Game Viewer**
 
-We provide a simple web-based frontend viewer for loading and displaying the generated `.json` game content files, facilitating quick validation of generation results.
+We provide a Unity-based game viewer for loading and displaying the generated game content files, facilitating validation of generation results within a Unity game environment.
 
 ### **Project Status**
 
