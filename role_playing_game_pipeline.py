@@ -12,6 +12,7 @@ class RolePlayingGame:
         self.role_play_game_str = ""
         self.key_points_str = ""
         self.external_message = ""
+        self.gender = "null"
         self.game_save_path = os.path.join(self.game_root, f"{self.game_name}_{self.game_id}")
         os.makedirs(self.game_save_path, exist_ok=True)
 
@@ -51,6 +52,7 @@ class RolePlayingGame:
 
     def role_playing_external_message_generate(self):
         external_message_dict = json.loads(self.external_message)
+        self.gender = external_message_dict.get("Gender", "null")
         image_prompts = external_message_dict["Character Portrait Illustration"]
         cover_path = os.path.join(self.game_save_path, "game_cover.png")
         if not os.path.exists(cover_path):
@@ -69,7 +71,7 @@ class RolePlayingGame:
         command_content = {
             "code": "null",
             "mark": "default",
-            "parameters": "null"
+            "parameters": self.gender
         }
         with open(command_path, "w", encoding="utf-8") as file:
             json.dump(command_content, file, ensure_ascii=False, indent=4)

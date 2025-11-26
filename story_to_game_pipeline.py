@@ -264,7 +264,7 @@ if __name__ == "__main__":
     # ================== 5. Generate AI Role-Playing Game ==================
     role_playing_generator = RolePlayingGame(
         game_root=GAME_ROOT_PATH,
-        game_name="default",
+        game_name="roleplaying",
         game_id="0"
     )
     role_playing_generator.generate(
@@ -281,3 +281,4 @@ if __name__ == "__main__":
         interactive_narrative_sequence,
         full_story_context
     )
+
