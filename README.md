@@ -66,10 +66,10 @@ These prompts are used to generate visual elements that enhance game immersion:
     ```
     The script will read `StoryExample.txt`, process it, and generate corresponding game directories with JSON files and assets in the `output/` directory, which can be directly loaded into compatible game software.
 
-### **Unity Game Viewer**
+### **Game Visualization Tool**
 
-We provide a Unity-based game viewer for loading and displaying the generated game content files, facilitating validation of generation results within a Unity game environment.
+We provide a Unity-based game viewer for loading and displaying the generated game content files, facilitating validation of generation results within a graphical environment.
 
-### **Project Status**
-
--   [ ] **Coming Soon to Open Source**: The code is undergoing refactoring to remove certain commercial dependencies and improve documentation. Stay tuned.
+- **Download**: You can download the tool from: `https://drive.google.com/file/d/1aKqrJh5PgpCA7mAai_IoDBus4Kk2sI8N/view?usp=sharing`
+- **Usage**: Simply extract the archive, launch `game-visualization-tool.exe`, and enter the path to your game files (the `output/` directory).
+- **Note**: For ready-made game files for testing, please contact the author.
