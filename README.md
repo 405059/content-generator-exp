@@ -1,6 +1,8 @@
-## Game Content Generation Pipeline for Intergenerational Stories
+# Game Content Generation Pipeline for Intergenerational Stories (Work in Progress...)
 
-This project is the official code implementation of the paper "Enhancing Young People's Understanding of Intergenerational Stories through Generative Games: A Case Study on Conveying Experiences and Perspectives". This pipeline can automatically convert structured story texts based on **Labov's narrative framework** into two core game content files: **Interactive Narrative Game** and **AI Role-Playing Game**.
+![System Architecture](system_architecture.png)
+
+This project is the official code implementation of the paper "GenerPlay: Bridging Asynchronous Intergenerational Communication Through Generative Interactive Narratives". This pipeline can automatically convert structured story texts based on **Labov's narrative framework** into two core mechanisms: **Branching Narrative Mechanism** and **AI Role-Playing Mechanism**.
 
 We provide a story case `StoryExample.txt` to demonstrate the complete end-to-end process.
 
@@ -16,60 +18,66 @@ The main entry script `story_to_game_pipeline.py` orchestrates the entire proces
                           +---> role_playing_game_pipeline.py ------> [role_playing_game.json]
 ```
 
-### Prompts
+### System Architecture and Prompts
 
-All core prompts are defined in `system_prompt.py`. They are crucial for implementing the transformation from narrative to game logic.
+The system architecture diagram above illustrates the complete pipeline workflow. All core prompts (shown with **gray backgrounds** in the diagram) are defined in `system_prompt.py` and are crucial for implementing the transformation from narrative to game logic.
 
-#### 1. Interactive Narrative Generation
-This process is driven by `interactive_story_game_pipeline.py` and primarily includes the following prompts:
+#### Pipeline Workflow
 
--   **`story_to_dmc`**:
-    -   **Corresponding to paper**: Section 5.2.2, Step 1 (Identify decisions and core constraints).
-    -   **Function**: Analyzes the "Complicating Action" section of the story and extracts the protagonist's structured decision-making and causality chain (Decision-Making and Causality, DMC). This is the foundational data for constructing branching narratives.
+The pipeline processes oral narratives through the following stages:
 
--   **`dmc_to_branch`**:
-    -   **Corresponding to paper**: Section 5.2.2, Step 2 & 3 (Generate counterfactual options & Construct "failure" narratives).
-    -   **Function**: Based on the DMC chain, generates "counterfactual" distractor options for each decision point and designs logically coherent "failure" or explanatory narratives for these non-mainline choices.
+1. **Narrative Preprocessing**:
+   - **`labovNarrativeAnnotation`**: Segments and annotates the narrative text according to Labov's six-component framework (L1-L6), producing structured annotation text.
 
-#### 2. AI Role-Playing Game Generation
-This process is driven by `role_playing_game_pipeline.py` and implemented through a series of chained prompts:
+2. **DMC (Decision-Making and Causality) Branch**:
+   - **`story_to_dmc`**: Analyzes DMC segments with context to extract structured decision-causality sequences from the protagonist's story.
+   - **`dmc_to_branch`**: Transforms the structured DMC sequence into interactive branching narratives with counterfactual choices, generating the final **Branch-Narratives-JSON** output.
 
--   **`pd_recognition`**:
-    -   **Corresponding to paper**: Section 5.3.
-    -   **Function**: As the **first step** of RPG generation, precisely identifies and extracts **Perspective Discussion (PD)** that carries core viewpoints from the "Coda" section of the story.
+3. **PD (Perspective Discussion) Branch**:
+   - **`pd_recognition`**: Identifies and extracts explicit perspective discussions from PD segments with context.
+   - **`role_play_game_generation`**: Creates AI character configurations with opposing viewpoints based on the identified perspectives, generating the final **Role-Playing-JSON** output.
 
--   **`extract_key_points`**:
-    -   **Corresponding to paper**: Section 5.3.
-    -   **Function**: Combines the extracted PD with the complete story to distill several **core perspectives** suitable for debate. These perspectives serve as the foundation for AI character configuration.
+4. **Asset Generation**:
+   - **`defineNarrativeStandards`** & **`drawIllustration`**: Generate stylistically consistent scene illustrations for branching narratives.
+   - **`role_play_external_message`**: Generate character portraits and visual assets for role-playing scenarios.
 
--   **`role_play_game_generation`**:
-    -   **Corresponding to paper**: Section 5.3.
-    -   **Function**: Selects a core perspective and generates a complete AI character configuration holding an **opposing stance**, including background story, personality, dialogue objectives, and initial debate scenario.
+All outputs are packaged with game assets for use in the **Game Visualization Tool**.
 
-#### 3. Asset Generation
-These prompts are used to generate visual elements that enhance game immersion:
+### **Visualization Tool**
 
--   **`define_narrative_standards` & `drawIllustration`**: Generate stylistically consistent illustrations for each scene in the interactive narrative game.
--   **`role_play_external_message`**: Generate visual information such as character portraits and identity-appropriate scenes for the AI role-playing game.
+We provide a Unity-based viewer for loading and displaying the generated mechanism content files, facilitating validation of generation results within a graphical environment.
+
+- **Download**: You can download the tool from: `https://drive.google.com/file/d/1aKqrJh5PgpCA7mAai_IoDBus4Kk2sI8N/view?usp=sharing`
+- **Usage**: Simply extract the archive, launch `game-visualization-tool.exe`, and enter the path to your mechanism files (the `output/` directory).
+- **Note**: For ready-made mechanism files for testing, please contact the author.
 
 ### **Usage**
 
-1.  **Implement API Functions**: 
-    First, you need to implement your own LLM and image generation logic in `chat.py`:
-    - **`generate_text()`**: Implement your preferred LLM API call (cloud-based like OpenAI, Anthropic, or local deployment like Ollama)
-    - **`generate_image()`**: Implement your preferred image generation API call (like Stability AI, DALL-E, or local models like Stable Diffusion)
+1.  **Install Dependencies**: 
+    Install the required Python packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 2.  **Execute Pipeline**:
-    Once the API functions are implemented, run the main pipeline:
+    Run the main pipeline:
     ```bash
     python story_to_game_pipeline.py
     ```
-    The script will read `StoryExample.txt`, process it, and generate corresponding game directories with JSON files and assets in the `output/` directory, which can be directly loaded into compatible game software.
+    The script will read `StoryExample.txt`, process it, and generate corresponding mechanism directories with JSON files and assets in the `output/` directory, which can be directly loaded into compatible interactive narrative software.
 
-### **Game Visualization Tool**
+### **Environment Configuration**
 
-We provide a Unity-based game viewer for loading and displaying the generated game content files, facilitating validation of generation results within a graphical environment.
+Before running the pipeline, you need to configure the LLM API credentials via environment variables:
 
-- **Download**: You can download the tool from: `https://drive.google.com/file/d/1aKqrJh5PgpCA7mAai_IoDBus4Kk2sI8N/view?usp=sharing`
-- **Usage**: Simply extract the archive, launch `game-visualization-tool.exe`, and enter the path to your game files (the `output/` directory).
-- **Note**: For ready-made game files for testing, please contact the author.
+```bash
+# Required: Your OpenAI-compatible API key
+export OPENAI_API_KEY=your-api-key-here
+
+# Optional: Custom API endpoint (for non-OpenAI providers)
+export OPENAI_API_BASE=https://your-api-endpoint.com/v1
+
+# Optional: Model name (default: gpt-4)
+export OPENAI_MODEL=gpt-4
+```
+

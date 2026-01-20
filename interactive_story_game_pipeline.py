@@ -11,7 +11,7 @@ class InteractiveStoryGame:
     Generate an interactive narrative game based on a series of narrative nodes.
     """
 
-    def __init__(self, game_root: str, game_name: str, game_id: str):
+    def __init__(self, game_root: str, game_name: str, game_id: str, enable_image_generation: bool):
         """
         Initialize the game generator.
 
@@ -19,10 +19,14 @@ class InteractiveStoryGame:
             game_root (str): Root directory for game storage.
             game_name (str): Game name.
             game_id (str): Unique game ID.
+            enable_image_generation (bool): Whether to generate actual images using AI. 
+                If False, a single white placeholder image (1920x1080) will be generated and shared by all nodes.
         """
         self.game_root = game_root
         self.game_name = game_name
         self.game_id = game_id
+        self.enable_image_generation = enable_image_generation
+        self.shared_placeholder_image = None  # Track the single shared placeholder image filename
 
         # Construct game save path. All files (images, txt) will be stored in this directory.
         self.game_save_path = os.path.join(self.game_root, f"{self.game_name}_{self.game_id}")
@@ -31,6 +35,21 @@ class InteractiveStoryGame:
         os.makedirs(self.game_save_path, exist_ok=True)
 
         print(f"Game '{self.game_name}' ({self.game_id}) will be saved at: {self.game_save_path}")
+        if not self.enable_image_generation:
+            print("Image generation disabled. Placeholder images will be generated.")
+
+    def _create_placeholder_image(self, image_path: str):
+        """
+        Create a 1920x1080 white placeholder image.
+        
+        Args:
+            image_path (str): Path to save the placeholder image.
+        """
+        from PIL import Image
+        
+        # Create 1920x1080 white image
+        placeholder = Image.new('RGB', (1920, 1080), 'white')
+        placeholder.save(image_path)
 
     def _get_image_prompt(self, input_act: str, raw_story_input: str, narrative_standards_str: str) -> Dict[str, str]:
         """
@@ -50,6 +69,7 @@ class InteractiveStoryGame:
             f"Story Part to Be Illustrated: {input_act}"
         )
 
+        print("    Generating image prompt...")
         # 替换: 使用 generate_text 替换 cached_chat_bot_format
         prompt_str = chat.generate_text(
             system_prompt=system_prompt.drawIllustration,
@@ -57,7 +77,7 @@ class InteractiveStoryGame:
         )
         
         try:
-            return json.loads(prompt_str)
+            return json.loads(chat.fix_json_response(prompt_str))
         except json.JSONDecodeError:
             print(f"Error: Unable to parse image prompt JSON: {prompt_str}")
             return {
@@ -66,7 +86,7 @@ class InteractiveStoryGame:
             }
 
     def _generate_and_save_image(self, input_act: str, image_filename: str, raw_story_input: str,
-                                 narrative_standards_str: str):
+                                 narrative_standards_str: str) -> str:
         """
         Generate and save image, skip if image already exists.
 
@@ -75,23 +95,42 @@ class InteractiveStoryGame:
             image_filename (str): Filename to save the image (e.g., 'img_0.png').
             raw_story_input (str): Complete story context.
             narrative_standards_str (str): Determined art style.
+            
+        Returns:
+            str: The actual image filename to use in game data.
         """
+        # If image generation is disabled, use shared placeholder
+        if not self.enable_image_generation:
+            # Create shared placeholder only once
+            if self.shared_placeholder_image is None:
+                self.shared_placeholder_image = "placeholder.png"
+                placeholder_path = os.path.join(self.game_save_path, self.shared_placeholder_image)
+                print(f"  Creating shared placeholder image: {self.shared_placeholder_image}")
+                self._create_placeholder_image(placeholder_path)
+            else:
+                print(f"  Using existing shared placeholder image: {self.shared_placeholder_image}")
+            return self.shared_placeholder_image
+
         # Image is saved directly in the game main directory
         full_image_path = os.path.join(self.game_save_path, image_filename)
 
         if os.path.exists(full_image_path):
-            print(f"Image {image_filename} already exists, skipping generation.")
-            return
+            print(f"  ✓ Image {image_filename} already exists, skipping generation.")
+            return image_filename
 
         # 1. Get image prompts
+        print(f"  Generating image: {image_filename}")
         image_prompt_dict = self._get_image_prompt(input_act, raw_story_input, narrative_standards_str)
 
         # 2. Generate image
+        print("    Calling AI image generation...")
         chat.generate_image(
             image_prompt_dict.get("positive_prompt", ""),
             image_prompt_dict.get("negative_prompt", ""),
             full_image_path
         )
+        print(f"  ✓ Image saved: {image_filename}")
+        return image_filename
 
     def _save_game_files(self, game_data: str):
         """
@@ -153,28 +192,30 @@ class InteractiveStoryGame:
 
             if node_type == "normal":
                 # --- C1 type: Normal narration ---
+                print(f"  Processing normal narration node...")
                 input_act = content
                 image_filename = f"img_{image_counter}.png"
-                self._generate_and_save_image(input_act, image_filename, raw_story_input, narrative_standards_str)
+                actual_image_filename = self._generate_and_save_image(input_act, image_filename, raw_story_input, narrative_standards_str)
 
-                game_data_parts.append(f"narration*{input_act}*main^{image_filename}")
+                game_data_parts.append(f"narration*{input_act}*main^{actual_image_filename}")
                 image_counter += 1
 
             elif node_type == "choice":
                 # --- C2/C3/C4 type: Choice ---
                 try:
-                    parsed_content = json.loads(content)
+                    parsed_content = json.loads(chat.fix_json_response(content))
                 except json.JSONDecodeError:
                     print(f"Error: Unable to parse choice node JSON content: {content}")
                     continue
 
                 if "scenarioDescription" in parsed_content:
                     # --- C2 type: Decision choice, each consequence has independent image ---
+                    print(f"  Processing decision choice node (C2 type)...")
                     question = parsed_content["scenarioDescription"]
                     options = parsed_content["next_scenario"]
 
                     question_image_filename = f"img_{image_counter}.png"
-                    self._generate_and_save_image(question, question_image_filename, raw_story_input,
+                    actual_question_image_filename = self._generate_and_save_image(question, question_image_filename, raw_story_input,
                                                   narrative_standards_str)
                     image_counter += 1
 
@@ -184,28 +225,31 @@ class InteractiveStoryGame:
                     random.shuffle(options)
 
                     choice_texts = [opt["choice"] for opt in options]
-                    choice_str = f"choice*{question}%{'|'.join(choice_texts)}*main^{question_image_filename}"
+                    choice_str = f"choice*{question}%{'|'.join(choice_texts)}*main^{actual_question_image_filename}"
                     game_data_parts.append(choice_str)
 
-                    for opt in options:
+                    print(f"    Generating {len(options)} consequence images...")
+                    for opt_idx, opt in enumerate(options, 1):
                         consequence_text = opt["consequence"]
                         consequence_image_filename = f"img_{image_counter}.png"
-                        self._generate_and_save_image(consequence_text, consequence_image_filename, raw_story_input,
+                        print(f"    Consequence {opt_idx}/{len(options)}:")
+                        actual_consequence_image_filename = self._generate_and_save_image(consequence_text, consequence_image_filename, raw_story_input,
                                                       narrative_standards_str)
 
                         branch_type = "main" if consequence_text == main_consequence_text else "other"
 
-                        narration_str = f"narration*{consequence_text}*{branch_type}^{consequence_image_filename}"
+                        narration_str = f"narration*{consequence_text}*{branch_type}^{actual_consequence_image_filename}"
                         game_data_parts.append(narration_str)
                         image_counter += 1
 
                 elif "question" in parsed_content:
                     # --- C3/C4 type: Viewpoint choice, all consequences share one image ---
+                    print(f"  Processing viewpoint choice node (C3/C4 type)...")
                     question = parsed_content["question"]
                     options = parsed_content["options"]
 
                     shared_image_filename = f"img_{image_counter}.png"
-                    self._generate_and_save_image(question, shared_image_filename, raw_story_input,
+                    actual_shared_image_filename = self._generate_and_save_image(question, shared_image_filename, raw_story_input,
                                                   narrative_standards_str)
                     image_counter += 1
 
@@ -215,19 +259,21 @@ class InteractiveStoryGame:
                     random.shuffle(options)
 
                     choice_texts = [opt["choice"] for opt in options]
-                    choice_str = f"choice*{question}%{'|'.join(choice_texts)}*main^{shared_image_filename}"
+                    choice_str = f"choice*{question}%{'|'.join(choice_texts)}*main^{actual_shared_image_filename}"
                     game_data_parts.append(choice_str)
 
+                    print(f"    Processing {len(options)} viewpoint consequences (shared image)...")
                     for opt in options:
                         consequence_text = opt["consequence"]
                         branch_type = "main" if consequence_text == main_consequence_text else "other"
 
-                        narration_str = f"narration*{consequence_text}*{branch_type}^{shared_image_filename}"
+                        narration_str = f"narration*{consequence_text}*{branch_type}^{actual_shared_image_filename}"
                         game_data_parts.append(narration_str)
                 else:
                     print(f"Warning: Unknown choice format: {content}")
 
         # Step 3: Combine all parts and save files
+        print("\nFinalizing game data...")
         final_game_data = "$".join(game_data_parts)
         self._save_game_files(final_game_data)
 

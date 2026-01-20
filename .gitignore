@@ -5,6 +5,23 @@
 # Python Cache
 __pycache__/
 *.pyc
+*.py[cod]
+*$py.class
+*.so
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Python package artifacts
+*.egg-info/
+dist/
+build/
+
+# Environment variables (DO NOT COMMIT API KEYS!)
+.env
 
 # Logs and temporary files
 *.log
