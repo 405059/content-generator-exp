@@ -4,18 +4,18 @@
 
 This project is the official code implementation of the paper "GenerPlay: Bridging Asynchronous Intergenerational Communication Through Generative Interactive Narratives". This pipeline can automatically convert structured story texts based on **Labov's narrative framework** into two core mechanisms: **Branching Narrative Mechanism** and **AI Role-Playing Mechanism**.
 
-We provide a story case `StoryExample.txt` to demonstrate the complete end-to-end process.
+We provide a story case `storySources.txt` to demonstrate the complete end-to-end process.
 
 ### Pipeline Overview
 
 The main entry script `story_to_game_pipeline.py` orchestrates the entire process:
 
 ```
-[StoryExample.txt] -> story_to_game_pipeline.py
-                          |
-                          +---> interactive_story_game_pipeline.py -> [interactive_story_game.json]
-                          |
-                          +---> role_playing_game_pipeline.py ------> [role_playing_game.json]
+[StorySources.txt] -> [StoryExample.txt] -> story_to_game_pipeline.py
+                                                 |
+                                                 +---> interactive_story_game_pipeline.py 
+                                                 |
+                                                 +---> role_playing_game_pipeline.py 
 ```
 
 ### System Architecture and Prompts
