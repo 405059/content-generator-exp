@@ -47,9 +47,13 @@ All outputs are packaged with game assets for use in the **Game Visualization To
 
 We provide a Unity-based viewer for loading and displaying the generated mechanism content files, facilitating validation of generation results within a graphical environment.
 
-- **Download**: You can download the tool from: `https://drive.google.com/file/d/1aKqrJh5PgpCA7mAai_IoDBus4Kk2sI8N/view?usp=sharing`
+- **Download**: You can download the tool from: `https://drive.google.com/file/d/1jCMILL15La35cwbaCheKK_PCklxvJh3S/view?usp=sharing`
 - **Usage**: Simply extract the archive, launch `game-visualization-tool.exe`, and enter the path to your mechanism files (the `output/` directory).
+
+![step_1](step_1.png)
+
 - **Note**: For ready-made mechanism files for testing, please contact the author.
+- **Interaction Data**: Captured interaction data can be found in the corresponding game directory as `divergent.txt` and `validating_feedback.txt`. For **Branching Narrative Game**, data is written upon game completion; for **AI Role-Playing Game**, data is recorded when clicking the return button.
 
 ### **Usage**
 
@@ -64,7 +68,7 @@ We provide a Unity-based viewer for loading and displaying the generated mechani
     ```bash
     python story_to_game_pipeline.py
     ```
-    The script will read `StoryExample.txt`, process it, and generate corresponding mechanism directories with JSON files and assets in the `output/` directory, which can be directly loaded into compatible interactive narrative software.
+    The script will directly read `StoryExample.txt`, process it, and generate corresponding mechanism directories with JSON files and assets in the `output/` directory, which can be directly loaded into compatible interactive narrative software. We also provide the `labovNarrativeAnnotation` prompt in `system_prompt.py` for converting raw narratives from `StorySources.txt` to the structured `StoryExample.txt` format.
 
 ### **Environment Configuration**
 
